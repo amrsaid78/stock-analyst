@@ -1,122 +1,687 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>تجربة محفظة الأسهم</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-        input { margin: 5px; padding: 8px; }
-        button { padding: 8px 15px; cursor: pointer; background: #4CAF50; color: white; border: none; border-radius: 4px; }
-        #auth-section, #main-app { border: 1px solid #ddd; padding: 20px; border-radius: 8px; max-width: 400px; margin-bottom: 20px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محلل الأسهم — البورصة المصرية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1f2d44;
+    --accent: #00d4aa;
+    --accent2: #3b82f6;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --success: #10b981;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --beginner: #10b981;
+    --mid: #f59e0b;
+    --pro: #ef4444;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    direction: rtl;
+  }
+
+  /* Grid background */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; position:relative; z-index:1; }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+    background: rgba(10,15,26,0.9);
+    backdrop-filter: blur(10px);
+    position: sticky; top:0; z-index:100;
+  }
+  .header-inner { display:flex; align-items:center; justify-content:space-between; }
+  .logo { display:flex; align-items:center; gap:12px; }
+  .logo-icon {
+    width:40px; height:40px; border-radius:10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+  }
+  .logo-text { font-size:18px; font-weight:700; }
+  .logo-sub { font-size:11px; color:var(--muted); font-weight:400; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:4px; background:var(--surface); padding:4px; border-radius:12px; margin: 28px 0; }
+  .tab {
+    flex:1; padding:10px 16px; border:none; background:transparent;
+    color:var(--muted); font-family:'Cairo',sans-serif; font-size:13px; font-weight:600;
+    border-radius:9px; cursor:pointer; transition:all .2s;
+  }
+  .tab.active { background:var(--surface2); color:var(--accent); box-shadow:0 0 0 1px var(--border); }
+  .tab:hover:not(.active) { color:var(--text); }
+
+  /* Pages */
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* Section card */
+  .card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    margin-bottom:20px;
+  }
+  .card-header {
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:20px; padding-bottom:16px;
+    border-bottom:1px solid var(--border);
+  }
+  .card-title { font-size:15px; font-weight:700; }
+  .badge {
+    font-size:10px; font-weight:700; padding:3px 10px;
+    border-radius:20px; letter-spacing:.5px;
+  }
+  .badge-beginner { background:rgba(16,185,129,.15); color:var(--beginner); border:1px solid rgba(16,185,129,.3); }
+  .badge-mid { background:rgba(245,158,11,.15); color:var(--mid); border:1px solid rgba(245,158,11,.3); }
+  .badge-pro { background:rgba(239,68,68,.15); color:var(--pro); border:1px solid rgba(239,68,68,.3); }
+
+  /* Stock info inputs */
+  .stock-info-grid {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px;
+    margin-bottom:24px;
+  }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:11px; color:var(--muted); font-weight:600; letter-spacing:.5px; }
+  .field input, .field select {
+    background:var(--surface2); border:1px solid var(--border);
+    color:var(--text); font-family:'Cairo',sans-serif; font-size:13px;
+    padding:9px 12px; border-radius:8px; outline:none; transition:.2s;
+    direction:rtl;
+  }
+  .field input:focus, .field select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,212,170,.1); }
+  .field input::placeholder { color:var(--muted); }
+
+  /* Criteria rows */
+  .criteria-row {
+    display:grid; grid-template-columns:2fr 1.2fr 2fr 80px; gap:12px;
+    align-items:center; padding:10px 14px; border-radius:10px;
+    margin-bottom:6px; transition:.2s;
+  }
+  .criteria-row:hover { background:rgba(255,255,255,.02); }
+  .criteria-label { font-size:13px; color:var(--text); display:flex; align-items:center; gap:8px; }
+  .criteria-num {
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:10px; font-weight:700; flex-shrink:0;
+  }
+  .num-b { background:rgba(16,185,129,.2); color:var(--beginner); }
+  .num-m { background:rgba(245,158,11,.2); color:var(--mid); }
+  .num-p { background:rgba(239,68,68,.2); color:var(--pro); }
+  .criteria-input {
+    background:rgba(0,212,170,.05); border:1px solid rgba(0,212,170,.2);
+    color:var(--accent); font-family:'IBM Plex Mono',monospace; font-size:13px;
+    padding:8px 12px; border-radius:8px; outline:none; transition:.2s;
+    text-align:center; width:100%;
+  }
+  .criteria-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,212,170,.1); }
+  .criteria-bench { font-size:11px; color:var(--muted); }
+  .criteria-result {
+    font-size:12px; font-weight:700; padding:4px 10px; border-radius:6px;
+    text-align:center; min-width:70px; transition:.3s;
+  }
+  .res-great { background:rgba(16,185,129,.15); color:var(--success); }
+  .res-good  { background:rgba(59,130,246,.15); color:var(--accent2); }
+  .res-warn  { background:rgba(245,158,11,.15); color:var(--warn); }
+  .res-bad   { background:rgba(239,68,68,.15); color:var(--danger); }
+  .res-empty { background:var(--surface2); color:var(--muted); }
+
+  /* Score panel */
+  .score-panel {
+    background:linear-gradient(135deg, rgba(0,212,170,.08), rgba(59,130,246,.08));
+    border:1px solid rgba(0,212,170,.2);
+    border-radius:16px; padding:24px; margin-bottom:20px;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+    flex-wrap:wrap;
+  }
+  .score-main { display:flex; align-items:center; gap:16px; }
+  .score-circle {
+    width:90px; height:90px; border-radius:50%; position:relative;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+  }
+  .score-circle svg { position:absolute; top:0; left:0; transform:rotate(-90deg); }
+  .score-num { font-size:28px; font-weight:900; font-family:'IBM Plex Mono',monospace; position:relative; z-index:1; }
+  .score-label { font-size:10px; color:var(--muted); position:relative; z-index:1; }
+  .score-verdict { font-size:20px; font-weight:800; }
+  .score-desc { font-size:13px; color:var(--muted); margin-top:4px; }
+  .score-breakdown { display:flex; gap:16px; flex-wrap:wrap; }
+  .score-part { text-align:center; }
+  .score-part-num { font-size:18px; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+  .score-part-label { font-size:10px; color:var(--muted); margin-top:2px; }
+
+  /* Action buttons */
+  .btn {
+    padding:10px 20px; border-radius:10px; border:none;
+    font-family:'Cairo',sans-serif; font-size:13px; font-weight:700;
+    cursor:pointer; transition:.2s; display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn-primary { background:var(--accent); color:#0a0f1a; }
+  .btn-primary:hover { background:#00b894; transform:translateY(-1px); }
+  .btn-outline { background:transparent; color:var(--text); border:1px solid var(--border); }
+  .btn-outline:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-row { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+
+  /* Compare page */
+  .compare-grid { display:grid; grid-template-columns:200px repeat(4,1fr); gap:1px; background:var(--border); border-radius:12px; overflow:hidden; }
+  .cg-header { background:var(--surface); padding:12px 10px; font-size:12px; font-weight:700; text-align:center; }
+  .cg-header.label-col { text-align:right; color:var(--muted); }
+  .cg-stock-name { background:var(--surface2); padding:10px; text-align:center; }
+  .cg-stock-name input {
+    background:transparent; border:none; color:var(--accent);
+    font-family:'Cairo',sans-serif; font-size:13px; font-weight:700;
+    text-align:center; width:100%; outline:none;
+  }
+  .cg-label { background:var(--surface); padding:10px 12px; font-size:12px; color:var(--muted); }
+  .cg-input-cell { background:var(--surface); padding:6px; }
+  .cg-input-cell input {
+    width:100%; background:rgba(0,212,170,.05); border:1px solid rgba(0,212,170,.15);
+    color:var(--accent); font-family:'IBM Plex Mono',monospace; font-size:12px;
+    padding:6px 8px; border-radius:6px; outline:none; text-align:center;
+    transition:.2s;
+  }
+  .cg-input-cell input:focus { border-color:var(--accent); }
+  .cg-result-cell { background:var(--surface); padding:6px; text-align:center; }
+  .cg-score-row { background:var(--surface2); }
+  .cg-score-cell { background:var(--surface2); padding:10px; text-align:center; font-size:16px; font-weight:900; font-family:'IBM Plex Mono',monospace; }
+  .cg-verdict-cell { background:var(--surface2); padding:10px; text-align:center; font-size:11px; font-weight:700; }
+
+  /* Guide page */
+  .guide-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+  .guide-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:18px; position:relative; overflow:hidden;
+  }
+  .guide-card::before {
+    content:''; position:absolute; top:0; right:0; width:4px; height:100%;
+  }
+  .guide-card.b::before { background:var(--beginner); }
+  .guide-card.m::before { background:var(--mid); }
+  .guide-card.p::before { background:var(--pro); }
+  .guide-num { font-size:28px; font-weight:900; color:var(--muted); font-family:'IBM Plex Mono',monospace; margin-bottom:4px; }
+  .guide-title { font-size:14px; font-weight:700; margin-bottom:6px; }
+  .guide-desc { font-size:12px; color:var(--muted); line-height:1.7; }
+  .guide-formula {
+    margin-top:10px; padding:8px 12px;
+    background:rgba(0,212,170,.06); border-radius:8px;
+    font-size:11px; font-family:'IBM Plex Mono',monospace; color:var(--accent);
+  }
+
+  /* Responsive */
+  @media(max-width:700px) {
+    .criteria-row { grid-template-columns:1fr 1fr; }
+    .criteria-bench { display:none; }
+    .compare-grid { grid-template-columns:120px repeat(2,1fr); }
+  }
+
+  /* Animate in */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .page.active { animation: fadeUp .3s ease; }
+
+  .divider { height:1px; background:var(--border); margin:16px 0; }
+  .section-label {
+    font-size:10px; font-weight:700; letter-spacing:1.5px;
+    padding:6px 12px; border-radius:6px; margin-bottom:12px; display:inline-block;
+  }
+  .sl-b { background:rgba(16,185,129,.1); color:var(--beginner); }
+  .sl-m { background:rgba(245,158,11,.1); color:var(--mid); }
+  .sl-p { background:rgba(239,68,68,.1); color:var(--pro); }
+</style>
 </head>
 <body>
 
-    <div id="auth-section">
-        <h3>تسجيل الدخول / إنشاء حساب</h3>
-        <input type="email" id="userEmail" placeholder="البريد الإلكتروني"><br>
-        <input type="password" id="userPass" placeholder="كلمة المرور"><br>
-        <button onclick="handleSignUp()">إنشاء حساب</button>
-        <button onclick="handleLogin()">دخول</button>
+<header>
+  <div class="container header-inner">
+    <div class="logo">
+      <div class="logo-icon">📈</div>
+      <div>
+        <div class="logo-text">محلل الأسهم</div>
+        <div class="logo-sub">البورصة المصرية</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);">خبرة 8 شهور — استثمار متوسط المدى</div>
+  </div>
+</header>
+
+<div class="container" style="padding-top:24px;padding-bottom:40px;">
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('evaluate')">🔍 تقييم سهم</button>
+    <button class="tab" onclick="switchTab('compare')">⚖️ مقارنة أسهم</button>
+    <button class="tab" onclick="switchTab('guide')">📚 الـ 20 نقطة</button>
+  </div>
+
+  <!-- PAGE 1: EVALUATE -->
+  <div id="page-evaluate" class="page active">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">بيانات السهم الأساسية</div>
+      </div>
+      <div class="stock-info-grid">
+        <div class="field"><label>اسم الشركة</label><input id="s-name" placeholder="مثال: مصر للفنادق"></div>
+        <div class="field"><label>رمز السهم</label><input id="s-code" placeholder="EGTS"></div>
+        <div class="field"><label>القطاع</label>
+          <select id="s-sector">
+            <option value="">اختر القطاع</option>
+            <option>بنوك وخدمات مالية</option><option>أدوية ورعاية صحية</option>
+            <option>سياحة وفنادق</option><option>اتصالات وتكنولوجيا</option>
+            <option>أغذية ومشروبات</option><option>أسمدة وكيماويات</option>
+            <option>عقارات وإنشاءات</option><option>شحن ونقل</option>
+            <option>خدمات مالية غير مصرفية</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="field"><label>سعر السهم (ج)</label><input id="s-price" type="number" placeholder="33.02"></div>
+      </div>
     </div>
 
-    <div id="main-app" style="display:none;">
-        <h3>مرحباً بك في محفظتك</h3>
-        <input type="text" id="stockName" placeholder="اسم السهم">
-        <input type="number" id="quantity" placeholder="الكمية">
-        <input type="number" id="price" placeholder="السعر">
-        <button onclick="saveToCloud()">حفظ في السحابة</button>
-        <button onclick="logout()" style="background:#f44336;">خروج</button>
-        <hr>
-        <h4>أسهمك:</h4>
-        <ul id="stocksList"></ul>
+    <!-- Beginner Section -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">النقاط الأساسية</div>
+        <span class="badge badge-beginner">مبتدئ · 1-6</span>
+      </div>
+      <div id="beginner-rows"></div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+    <!-- Mid Section -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">نقاط التحليل المتوسط</div>
+        <span class="badge badge-mid">متوسط · 7-13</span>
+      </div>
+      <div id="mid-rows"></div>
+    </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCcv6pKofo8iBGY3EbMiXlmlsrdUj6qYQ8",
-            authDomain: "test-d03ba.firebaseapp.com",
-            projectId: "test-d03ba",
-            storageBucket: "test-d03ba.firebasestorage.app",
-            messagingSenderId: "633459459744",
-            appId: "1:633459459744:web:139bd6e8818789799d2bc5"
-        };
+    <!-- Pro Section -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">نقاط المحترف</div>
+        <span class="badge badge-pro">محترف · 14-20</span>
+      </div>
+      <div id="pro-rows"></div>
+    </div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    <!-- Score Panel -->
+    <div class="score-panel" id="score-panel">
+      <div class="score-main">
+        <div class="score-circle">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+            <circle id="score-arc" cx="45" cy="45" r="38" fill="none" stroke="var(--accent)" stroke-width="6"
+              stroke-linecap="round" stroke-dasharray="239" stroke-dashoffset="239" style="transition:stroke-dashoffset .8s ease"/>
+          </svg>
+          <div class="score-num" id="score-num">0</div>
+          <div class="score-label">/ 100</div>
+        </div>
+        <div>
+          <div class="score-verdict" id="score-verdict">أدخل البيانات</div>
+          <div class="score-desc" id="score-desc">سيظهر التقييم تلقائياً</div>
+        </div>
+      </div>
+      <div class="score-breakdown">
+        <div class="score-part"><div class="score-part-num" id="sc-b" style="color:var(--beginner)">—</div><div class="score-part-label">مبتدئ</div></div>
+        <div class="score-part"><div class="score-part-num" id="sc-m" style="color:var(--mid)">—</div><div class="score-part-label">متوسط</div></div>
+        <div class="score-part"><div class="score-part-num" id="sc-p" style="color:var(--pro)">—</div><div class="score-part-label">محترف</div></div>
+      </div>
+    </div>
 
-        // وظيفة إنشاء الحساب
-        window.handleSignUp = async () => {
-            const email = document.getElementById('userEmail').value;
-            const pass = document.getElementById('userPass').value;
-            try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-                alert("تم إنشاء الحساب بنجاح!");
-            } catch (e) { alert("خطأ: " + e.message); }
-        };
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="resetForm()">🔄 تصفير</button>
+      <button class="btn btn-primary" onclick="saveToCompare()">⚖️ أضف للمقارنة</button>
+    </div>
+  </div>
 
-        // وظيفة الدخول
-        window.handleLogin = async () => {
-            const email = document.getElementById('userEmail').value;
-            const pass = document.getElementById('userPass').value;
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (e) { alert("خطأ: " + e.message); }
-        };
+  <!-- PAGE 2: COMPARE -->
+  <div id="page-compare" class="page">
+    <div class="card">
+      <div class="card-header"><div class="card-title">مقارنة حتى 4 أسهم</div></div>
+      <div class="compare-grid" id="compare-grid"></div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn btn-outline" onclick="clearCompare()">🗑️ مسح الكل</button>
+      </div>
+    </div>
+  </div>
 
-        // تسجيل الخروج
-        window.logout = () => signOut(auth);
+  <!-- PAGE 3: GUIDE -->
+  <div id="page-guide" class="page">
+    <div class="card">
+      <div class="card-header"><div class="card-title">الـ 20 نقطة الكاملة لتقييم الأسهم</div></div>
+      <div class="guide-grid" id="guide-grid"></div>
+    </div>
+  </div>
 
-        // مراقبة حالة المستخدم
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('auth-section').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                loadStocks(user.uid);
-            } else {
-                document.getElementById('auth-section').style.display = 'block';
-                document.getElementById('main-app').style.display = 'none';
-            }
-        });
+</div>
 
-        // حفظ البيانات
-        window.saveToCloud = async () => {
-            const user = auth.currentUser;
-            const stock = document.getElementById('stockName').value;
-            const qty = document.getElementById('quantity').value;
-            const price = document.getElementById('price').value;
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────
+const CRITERIA = [
+  // Beginner
+  { id:'pe',  level:'b', num:1,  label:'مكرر الربحية P/E',       unit:'',  placeholder:'13.2',  weight:10,
+    bench:'أقل من 10 ممتاز · أقل من 15 جيد',
+    formula:'P/E = سعر السهم ÷ ربحية السهم',
+    desc:'بتدفع كام جنيه مقابل كل جنيه ربح',
+    eval: v => v<10?{t:'ممتاز ✅',c:'great',s:10}:v<15?{t:'جيد ✅',c:'good',s:8}:v<20?{t:'مقبول ⚠️',c:'warn',s:5}:{t:'غالي ❌',c:'bad',s:2} },
+  { id:'eps', level:'b', num:2,  label:'ربحية السهم EPS',          unit:'ج', placeholder:'2.44',  weight:8,
+    bench:'موجبة ومتزايدة سنة بعد سنة',
+    formula:'صافي الربح ÷ عدد الأسهم',
+    desc:'كم ربحت الشركة لكل سهم',
+    eval: v => v>0?{t:'موجبة ✅',c:'great',s:8}:{t:'خسارة ❌',c:'bad',s:0} },
+  { id:'beta',level:'b', num:3,  label:'بيتا β',                   unit:'',  placeholder:'0.51',  weight:8,
+    bench:'أقل من 0.7 هادي · سالبة = عكس السوق',
+    formula:'تقاس إحصائياً مقارنة بالسوق',
+    desc:'مستوى التذبذب مقارنة بالسوق كله',
+    eval: v => v<0?{t:'عكس السوق ⭐',c:'great',s:8}:v<0.7?{t:'هادي ✅',c:'great',s:8}:v<1?{t:'متوسط ⚠️',c:'warn',s:5}:{t:'متقلب ❌',c:'bad',s:2} },
+  { id:'chg1y',level:'b',num:4, label:'التغير خلال سنة %',         unit:'%', placeholder:'22.1',  weight:7,
+    bench:'أقل من 100% أأمن للدخول',
+    formula:'(السعر الحالي - سعر قبل سنة) ÷ سعر قبل سنة',
+    desc:'هل الفرصة لا تزال موجودة؟',
+    eval: v => v>100?{t:'ارتفع كثيراً ⚠️',c:'warn',s:3}:v>0?{t:'إيجابي ✅',c:'good',s:7}:{t:'نازل ❌',c:'bad',s:4} },
+  { id:'div',  level:'b',num:5, label:'توزيعات الأرباح %',          unit:'%', placeholder:'4.7',   weight:7,
+    bench:'أعلى من 3% جيد · أعلى من 5% ممتاز',
+    formula:'توزيع السهم السنوي ÷ سعر السهم × 100',
+    desc:'دخل إضافي وأنت شايل السهم',
+    eval: v => v>5?{t:'ممتاز ✅',c:'great',s:7}:v>2?{t:'جيد ✅',c:'good',s:5}:v>0?{t:'بسيط ⚠️',c:'warn',s:3}:{t:'لا يوزع',c:'warn',s:0} },
+  { id:'divers',level:'b',num:6,label:'قطاع جديد في المحفظة؟',     unit:'',  placeholder:'',      weight:5,
+    bench:'قطاع جديد = تنويع حقيقي',
+    formula:'اختر من القائمة',
+    desc:'هل إضافة هذا السهم تنوّع محفظتك؟',
+    eval: v => v===''||v==='0'?{t:'—',c:'empty',s:0}:v==='yes'?{t:'تنويع ✅',c:'great',s:5}:{t:'مكرر ⚠️',c:'warn',s:2},
+    select: [{v:'',l:'— اختر —'},{v:'yes',l:'نعم — قطاع جديد'},{v:'no',l:'لا — موجود عندي'}] },
+  // Mid
+  { id:'roe',  level:'m',num:7, label:'العائد على حقوق الملكية ROE',unit:'%', placeholder:'32.3',  weight:8,
+    bench:'أعلى من 15% جيد · أعلى من 30% ممتاز',
+    formula:'صافي الربح ÷ حقوق الملكية × 100',
+    desc:'الإدارة بتشتغل كويس بأموال المساهمين؟',
+    eval: v => v>30?{t:'ممتاز ✅',c:'great',s:8}:v>15?{t:'جيد ✅',c:'good',s:6}:v>8?{t:'مقبول ⚠️',c:'warn',s:4}:{t:'ضعيف ❌',c:'bad',s:1} },
+  { id:'margin',level:'m',num:8,label:'هامش الربح الإجمالي %',      unit:'%', placeholder:'93.3',  weight:7,
+    bench:'أعلى من 30% جيد · أعلى من 60% ممتاز',
+    formula:'(الإيرادات - تكلفة الإيرادات) ÷ الإيرادات',
+    desc:'الشركة كفؤة في تحويل المبيعات لربح؟',
+    eval: v => v>60?{t:'ممتاز ✅',c:'great',s:7}:v>30?{t:'جيد ✅',c:'good',s:5}:v>15?{t:'مقبول ⚠️',c:'warn',s:3}:{t:'منخفض ❌',c:'bad',s:1} },
+  { id:'pb',   level:'m',num:9, label:'السعر / القيمة الدفترية P/B', unit:'x', placeholder:'3.9',   weight:6,
+    bench:'أقل من 1.5 رخيص · أقل من 3 مقبول',
+    formula:'سعر السهم ÷ القيمة الدفترية للسهم',
+    desc:'هل بتشتري الشركة بسعر عادل؟',
+    eval: v => v<1.5?{t:'رخيص ✅',c:'great',s:6}:v<3?{t:'مقبول ⚠️',c:'warn',s:4}:{t:'غالي ❌',c:'bad',s:2} },
+  { id:'vol',  level:'m',num:10,label:'معدل التداول اليومي',         unit:'',  placeholder:'444K',  weight:5,
+    bench:'أعلى من 100K يومياً مقبول',
+    formula:'متوسط عدد الأسهم المتداولة يومياً',
+    desc:'هل تقدر تبيع بسهولة وقت محتاج؟',
+    eval: v => {const n=parseFloat(String(v).replace(/[KkMm]/,''))*(/[Mm]/i.test(v)?1e6:/[Kk]/i.test(v)?1e3:1); return n>1e6?{t:'سيولة عالية ✅',c:'great',s:5}:n>1e5?{t:'مقبول ⚠️',c:'warn',s:3}:{t:'سيولة منخفضة ❌',c:'bad',s:1}}, text:true },
+  { id:'rsi',  level:'m',num:11,label:'مؤشر RSI (14 يوم)',           unit:'',  placeholder:'37.38', weight:6,
+    bench:'أقل من 30 فرصة شراء · أعلى من 70 خطر',
+    formula:'يُحسب من متوسط الارتفاعات والانخفاضات',
+    desc:'هل السهم مباع أو مشتري بشكل زائد؟',
+    eval: v => v<30?{t:'فرصة شراء 🟢',c:'great',s:6}:v<50?{t:'جيد ✅',c:'good',s:5}:v<70?{t:'مقبول ⚠️',c:'warn',s:3}:{t:'مشبع بيعاً 🔴',c:'bad',s:1} },
+  { id:'revgr',level:'m',num:12,label:'نمو الإيرادات سنوياً %',      unit:'%', placeholder:'22',    weight:6,
+    bench:'أعلى من 10% جيد · أعلى من 20% قوي',
+    formula:'(إيرادات هذه السنة - العام الماضي) ÷ العام الماضي',
+    desc:'الشركة بتكبر فعلاً أم واقفة؟',
+    eval: v => v>20?{t:'نمو قوي ✅',c:'great',s:6}:v>10?{t:'جيد ✅',c:'good',s:4}:v>0?{t:'بطيء ⚠️',c:'warn',s:2}:{t:'تراجع ❌',c:'bad',s:0} },
+  { id:'opp',  level:'m',num:13,label:'تكلفة الفرصة البديلة',        unit:'',  placeholder:'',      weight:2,
+    bench:'قارن بأفضل سهم تاني عندك دلوقتي',
+    formula:'اختر من القائمة',
+    desc:'الفلوس في سهم خاسر ممكن تشتغل في رابح',
+    eval: v => v===''||v==='0'?{t:'—',c:'empty',s:0}:v==='no'?{t:'لا يوجد بديل ✅',c:'great',s:2}:v==='maybe'?{t:'بديل محتمل ⚠️',c:'warn',s:1}:{t:'يوجد بديل أفضل ❌',c:'bad',s:0},
+    select: [{v:'',l:'— اختر —'},{v:'no',l:'لا — هذا السهم الأفضل'},{v:'maybe',l:'ربما — في بديل مشابه'},{v:'yes',l:'نعم — في سهم أفضل منه'}] },
+  // Pro
+  { id:'peg',  level:'p',num:14,label:'نسبة PEG',                    unit:'',  placeholder:'1.2',   weight:5,
+    bench:'أقل من 1 ممتاز · أقل من 2 مقبول',
+    formula:'P/E ÷ نسبة النمو السنوي',
+    desc:'P/E مع الأخذ بعين الاعتبار نمو الشركة',
+    eval: v => v<1?{t:'رخيص مع نمو ✅',c:'great',s:5}:v<2?{t:'مقبول ⚠️',c:'warn',s:3}:{t:'غالي ❌',c:'bad',s:1} },
+  { id:'roa',  level:'p',num:15,label:'العائد على الأصول ROA %',      unit:'%', placeholder:'31.4',  weight:5,
+    bench:'أعلى من 10% جيد · أعلى من 20% ممتاز',
+    formula:'صافي الربح ÷ إجمالي الأصول × 100',
+    desc:'الشركة بتستغل أصولها كفء؟',
+    eval: v => v>20?{t:'ممتاز ✅',c:'great',s:5}:v>10?{t:'جيد ✅',c:'good',s:4}:v>5?{t:'مقبول ⚠️',c:'warn',s:2}:{t:'ضعيف ❌',c:'bad',s:1} },
+  { id:'moat', level:'p',num:16,label:'الميزة التنافسية (Moat)',      unit:'',  placeholder:'',      weight:4,
+    bench:'احتكار أو براءة اختراع أو عقود حكومية',
+    formula:'قيّم يدوياً 1-4',
+    desc:'هل للشركة حاجة صعب أي منافس يعملها؟',
+    eval: v => {const n=parseInt(v); return isNaN(n)?{t:'—',c:'empty',s:0}:n>=4?{t:'ميزة قوية ✅',c:'great',s:4}:n>=3?{t:'جيد ✅',c:'good',s:3}:n>=2?{t:'متوسط ⚠️',c:'warn',s:2}:{t:'ضعيف ❌',c:'bad',s:1}} },
+  { id:'state',level:'p',num:17,label:'دعم الدولة للقطاع',            unit:'',  placeholder:'',      weight:3,
+    bench:'قطاع مدعوم حكومياً = مستقر أكثر',
+    formula:'قيّم يدوياً 1-3',
+    desc:'الحكومة بتدعم هذا القطاع أم لا؟',
+    eval: v => {const n=parseInt(v); return isNaN(n)?{t:'—',c:'empty',s:0}:n>=3?{t:'مدعوم ✅',c:'great',s:3}:n>=2?{t:'جزئياً ⚠️',c:'warn',s:2}:{t:'لا دعم',c:'bad',s:1}} },
+  { id:'fcf',  level:'p',num:18,label:'التدفق النقدي الحر FCF',        unit:'',  placeholder:'',      weight:4,
+    bench:'موجب ومتزايد = أفضل',
+    formula:'اختر من القائمة',
+    desc:'الربح المحاسبي أحياناً مضلل — الكاش هو الحقيقة',
+    eval: v => v===''||v==='0'?{t:'—',c:'empty',s:0}:v==='pos'?{t:'موجب ✅',c:'great',s:4}:v==='neu'?{t:'محايد ⚠️',c:'warn',s:2}:{t:'سالب ❌',c:'bad',s:0},
+    select: [{v:'',l:'— اختر —'},{v:'pos',l:'موجب ومتزايد ✅'},{v:'neu',l:'موجب لكن ثابت ⚠️'},{v:'neg',l:'سالب ❌'}] },
+  { id:'debt', level:'p',num:19,label:'نسبة الدين للأصول %',           unit:'%', placeholder:'30',    weight:3,
+    bench:'أقل من 40% آمن · أعلى من 70% خطر',
+    formula:'إجمالي الديون ÷ إجمالي الأصول × 100',
+    desc:'الشركة مديونة كتير أم لا؟',
+    eval: v => v<40?{t:'آمن ✅',c:'great',s:3}:v<70?{t:'مقبول ⚠️',c:'warn',s:2}:{t:'ديون عالية ❌',c:'bad',s:0} },
+  { id:'ma200',level:'p',num:20,label:'السعر فوق المتوسط 200 يوم؟',   unit:'',  placeholder:'',      weight:3,
+    bench:'فوق المتوسط = اتجاه صاعد',
+    formula:'اختر من القائمة',
+    desc:'الاتجاه العام للسهم صاعد أم نازل؟',
+    eval: v => v===''||v==='0'?{t:'—',c:'empty',s:0}:v==='yes'?{t:'صاعد ✅',c:'great',s:3}:{t:'نازل ❌',c:'bad',s:0},
+    select: [{v:'',l:'— اختر —'},{v:'yes',l:'نعم — فوق المتوسط'},{v:'no',l:'لا — تحت المتوسط'}] },
+];
 
-            try {
-                await addDoc(collection(db, "user_stocks"), {
-                    uid: user.uid,
-                    stock: stock,
-                    quantity: Number(qty),
-                    price: Number(price),
-                    timestamp: new Date()
-                });
-                alert("تم الحفظ!");
-                loadStocks(user.uid);
-            } catch (e) { console.error(e); }
-        };
+// ── Build evaluate page rows ──────────────────────────────────────────────
+function buildRows() {
+  ['b','m','p'].forEach(lvl => {
+    const container = document.getElementById({b:'beginner-rows',m:'mid-rows',p:'pro-rows'}[lvl]);
+    const numClass = {b:'num-b',m:'num-m',p:'num-p'}[lvl];
+    CRITERIA.filter(c=>c.level===lvl).forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'criteria-row';
+      const inputEl = c.select
+        ? `<select class="criteria-input" id="inp-${c.id}" onchange="recalculate()" style="cursor:pointer">
+            ${c.select.map(o=>`<option value="${o.v}">${o.l}</option>`).join('')}
+           </select>`
+        : `<input class="criteria-input" id="inp-${c.id}" type="${c.text?'text':'number'}"
+            placeholder="${c.placeholder}" step="any" oninput="recalculate()" />`;
+      row.innerHTML = `
+        <div class="criteria-label">
+          <div class="criteria-num ${numClass}">${c.num}</div>
+          ${c.label}
+        </div>
+        ${inputEl}
+        <div class="criteria-bench">${c.bench}</div>
+        <div class="criteria-result res-empty" id="res-${c.id}">—</div>
+      `;
+      container.appendChild(row);
+    });
+  });
+}
 
-        // جلب البيانات
-        async function loadStocks(uid) {
-            const q = query(collection(db, "user_stocks"), where("uid", "==", uid));
-            const querySnapshot = await getDocs(q);
-            const list = document.getElementById('stocksList');
-            list.innerHTML = "";
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const li = document.createElement('li');
-                li.textContent = `${data.stock} - الكمية: ${data.quantity} - السعر: ${data.price}`;
-                list.appendChild(li);
-            });
-        }
-    </script>
+// ── Recalculate score ─────────────────────────────────────────────────────
+function recalculate() {
+  let totalScore=0, bScore=0, mScore=0, pScore=0;
+  let filled=0;
+  CRITERIA.forEach(c => {
+    const inp = document.getElementById('inp-'+c.id);
+    const res = document.getElementById('res-'+c.id);
+    const raw = inp.tagName==='SELECT' ? inp.value : inp.value.trim();
+    if(raw==='') { res.className='criteria-result res-empty'; res.textContent='—'; return; }
+    const v = c.text ? raw : parseFloat(raw);
+    if(!c.text && isNaN(v)) return;
+    const result = c.eval(v);
+    res.className = 'criteria-result res-'+result.c;
+    res.textContent = result.t;
+    totalScore += result.s;
+    if(c.level==='b') bScore+=result.s;
+    if(c.level==='m') mScore+=result.s;
+    if(c.level==='p') pScore+=result.s;
+    filled++;
+  });
+
+  // Update score panel
+  document.getElementById('score-num').textContent = totalScore;
+  document.getElementById('sc-b').textContent = bScore;
+  document.getElementById('sc-m').textContent = mScore;
+  document.getElementById('sc-p').textContent = pScore;
+
+  // Arc
+  const arc = document.getElementById('score-arc');
+  const pct = Math.min(totalScore/100, 1);
+  arc.style.strokeDashoffset = 239 - (239*pct);
+  const colors = totalScore>=80?'var(--success)':totalScore>=60?'var(--accent2)':totalScore>=40?'var(--warn)':'var(--danger)';
+  arc.style.stroke = colors;
+
+  // Verdict
+  const v = document.getElementById('score-verdict');
+  const d = document.getElementById('score-desc');
+  if(filled===0){ v.textContent='أدخل البيانات'; d.textContent='سيظهر التقييم تلقائياً'; return; }
+  if(totalScore>=80){ v.textContent='شراء قوي ✅'; v.style.color='var(--success)'; d.textContent='السهم ممتاز في معظم المعايير'; }
+  else if(totalScore>=60){ v.textContent='شراء بحذر ✅'; v.style.color='var(--accent2)'; d.textContent='جيد مع بعض التحفظات'; }
+  else if(totalScore>=40){ v.textContent='انتظار ⚠️'; v.style.color='var(--warn)'; d.textContent='في نقاط ضعف تحتاج مراجعة'; }
+  else { v.textContent='تجنب ❌'; v.style.color='var(--danger)'; d.textContent='نقاط ضعف كثيرة — ابحث عن بديل'; }
+}
+
+// ── Compare page ──────────────────────────────────────────────────────────
+let compareStocks = [];
+
+function saveToCompare() {
+  const name = document.getElementById('s-name').value || 'سهم جديد';
+  const sector = document.getElementById('s-sector').value;
+  const vals = {};
+  CRITERIA.forEach(c => {
+    vals[c.id] = document.getElementById('inp-'+c.id).value;
+  });
+  const score = parseInt(document.getElementById('score-num').textContent)||0;
+  const verdict = document.getElementById('score-verdict').textContent;
+  if(compareStocks.length>=4) compareStocks.shift();
+  compareStocks.push({name, sector, vals, score, verdict});
+  buildCompareTable();
+  switchTab('compare');
+}
+
+function buildCompareTable() {
+  const grid = document.getElementById('compare-grid');
+  const cols = Math.max(compareStocks.length, 1);
+  grid.style.gridTemplateColumns = `200px repeat(${cols},1fr)`;
+  let html = `<div class="cg-header label-col">البيان</div>`;
+  compareStocks.forEach(s => html+=`<div class="cg-header">${s.name}<br><small style="color:var(--muted);font-weight:400">${s.sector||''}</small></div>`);
+
+  CRITERIA.forEach(c => {
+    html += `<div class="cg-label">${c.num}. ${c.label}</div>`;
+    compareStocks.forEach(s => {
+      const raw = s.vals[c.id];
+      let cell = `<div class="cg-input-cell"><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--accent)">${raw||'—'}</span></div>`;
+      if(raw!=='') {
+        const v = c.text?raw:parseFloat(raw);
+        if(!isNaN(v)||c.text){ const r=c.eval(v); cell=`<div class="cg-result-cell"><span class="criteria-result res-${r.c}" style="font-size:11px">${r.t}</span></div>`; }
+      }
+      html += cell;
+    });
+  });
+
+  // Score row
+  html += `<div class="cg-label" style="font-weight:700;color:var(--text)">الدرجة الكلية</div>`;
+  compareStocks.forEach(s => {
+    const color = s.score>=80?'var(--success)':s.score>=60?'var(--accent2)':s.score>=40?'var(--warn)':'var(--danger)';
+    html+=`<div class="cg-score-cell" style="color:${color}">${s.score}</div>`;
+  });
+  html += `<div class="cg-label" style="font-weight:700;color:var(--text)">الحكم</div>`;
+  compareStocks.forEach(s => html+=`<div class="cg-verdict-cell">${s.verdict}</div>`);
+
+  grid.innerHTML = html;
+}
+
+function clearCompare() { compareStocks=[]; buildCompareTable(); }
+
+// ── Guide page ────────────────────────────────────────────────────────────
+function buildGuide() {
+  const grid = document.getElementById('guide-grid');
+  CRITERIA.forEach(c => {
+    const levelClass = c.level;
+    const levelLabel = {b:'مبتدئ',m:'متوسط',p:'محترف'}[c.level];
+    const div = document.createElement('div');
+    div.className = `guide-card ${c.level}`;
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div class="guide-num">${String(c.num).padStart(2,'0')}</div>
+        <span class="badge badge-${c.level==='b'?'beginner':c.level==='m'?'mid':'pro'}">${levelLabel}</span>
+      </div>
+      <div class="guide-title">${c.label}</div>
+      <div class="guide-desc">${c.desc}<br><span style="color:var(--muted);font-size:11px">${c.bench}</span></div>
+      <div class="guide-formula">${c.formula}</div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>{ t.classList.toggle('active', ['evaluate','compare','guide'][i]===name); });
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+}
+
+function resetForm() {
+  document.querySelectorAll('.criteria-input').forEach(i=>i.value='');
+  ['s-name','s-price'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('s-sector').value='';
+  recalculate();
+}
+
+// ── LocalStorage persistence ─────────────────────────────────────────────
+const STORE_KEY = 'egypt_stocks_compare';
+function saveCompare() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(compareStocks)); } catch(e){}
+}
+function loadCompare() {
+  try {
+    const saved = localStorage.getItem(STORE_KEY);
+    if(saved) { compareStocks = JSON.parse(saved); }
+  } catch(e){}
+}
+const _origSave = saveToCompare;
+function saveToCompare() {
+  const name = document.getElementById('s-name').value || 'سهم جديد';
+  const sector = document.getElementById('s-sector').value;
+  const vals = {};
+  CRITERIA.forEach(c => { vals[c.id] = document.getElementById('inp-'+c.id).value; });
+  const score = parseInt(document.getElementById('score-num').textContent)||0;
+  const verdict = document.getElementById('score-verdict').textContent;
+  if(compareStocks.length>=4) compareStocks.shift();
+  compareStocks.push({name, sector, vals, score, verdict});
+  saveCompare();
+  buildCompareTable();
+  switchTab('compare');
+}
+const _origClear = clearCompare;
+function clearCompare() { compareStocks=[]; saveCompare(); buildCompareTable(); }
+
+// ── Init ──────────────────────────────────────────────────────────────────
+buildRows();
+buildGuide();
+loadCompare();
+buildCompareTable();
+</script>
 </body>
 </html>
