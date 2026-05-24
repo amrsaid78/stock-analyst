@@ -232,6 +232,29 @@
     font-size:11px; font-family:'IBM Plex Mono',monospace; color:var(--accent);
   }
 
+
+  .yr-btn {
+    padding:6px 16px;border-radius:8px;border:1px solid var(--border);
+    background:transparent;color:var(--muted);font-family:'Cairo',sans-serif;
+    font-size:12px;font-weight:600;cursor:pointer;transition:.2s;
+  }
+  .yr-btn.active { background:var(--accent);color:#0a0f1a;border-color:var(--accent); }
+  .yr-btn:hover:not(.active) { border-color:var(--accent);color:var(--accent); }
+  .sc-result-card {
+    border-radius:12px;padding:16px;text-align:center;
+  }
+  .sc-val { font-size:22px;font-weight:900;font-family:'IBM Plex Mono',monospace;margin:8px 0 4px; }
+  .sc-profit { font-size:13px;font-weight:600; }
+  .sc-label { font-size:11px;color:var(--muted);margin-top:4px; }
+  .sc-bar-row { display:flex;align-items:center;gap:10px;margin-bottom:10px; }
+  .sc-bar-label { font-size:12px;width:70px;flex-shrink:0; }
+  .sc-bar-track { flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:20px;overflow:hidden; }
+  .sc-bar-fill { height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px; }
+  .sc-bar-num { font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:700;color:#fff;white-space:nowrap; }
+  .sc-table th { background:var(--surface2);padding:8px 12px;font-size:11px;color:var(--muted);font-weight:600;text-align:center;border-bottom:1px solid var(--border); }
+  .sc-table td { padding:8px 12px;font-size:12px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04); }
+  .sc-table tr:last-child td { border-bottom:none; }
+
   /* Responsive */
   @media(max-width:700px) {
     .criteria-row { grid-template-columns:1fr 1fr; }
@@ -264,7 +287,7 @@
         <div class="logo-sub">البورصة المصرية</div>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--muted);"> استثمار متوسط المدى </div>
+    <div style="font-size:12px;color:var(--muted);">خبرة 8 شهور — استثمار متوسط المدى</div>
   </div>
 </header>
 
@@ -273,6 +296,7 @@
   <div class="tabs">
     <button class="tab active" onclick="switchTab('evaluate')">🔍 تقييم سهم</button>
     <button class="tab" onclick="switchTab('compare')">⚖️ مقارنة أسهم</button>
+    <button class="tab" onclick="switchTab('scenario')">📊 السيناريوهات</button>
     <button class="tab" onclick="switchTab('guide')">📚 الـ 20 نقطة</button>
   </div>
 
@@ -366,6 +390,123 @@
         <button class="btn btn-outline" onclick="clearCompare()">🗑️ مسح الكل</button>
       </div>
     </div>
+  </div>
+
+
+  <!-- PAGE: SCENARIO CALCULATOR -->
+  <div id="page-scenario" class="page">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">بيانات الاستثمار</div>
+        <span class="badge badge-beginner">أدخل من Investing.com أو Thndr</span>
+      </div>
+      <div class="stock-info-grid">
+        <div class="field"><label>اسم السهم</label><input id="sc-name" placeholder="مصر للفنادق" oninput="runScenario()"></div>
+        <div class="field"><label>سعر الشراء (ج)</label><input id="sc-buy" type="number" placeholder="33.02" step="any" oninput="runScenario()"></div>
+        <div class="field"><label>عدد الأسهم</label><input id="sc-qty" type="number" placeholder="10" oninput="runScenario()"></div>
+        <div class="field"><label>توزيعات سنوية % (لو بيوزع)</label><input id="sc-div" type="number" placeholder="4.7" step="any" oninput="runScenario()"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">افتراضات النمو السنوي</div>
+        <span class="badge badge-mid">حرك السلايدر أو اكتب النسبة</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
+
+        <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:13px;font-weight:700;color:var(--success)">🐢 متحفظ</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input id="sl-cons" type="range" min="0" max="50" value="10" step="1" style="width:100px;accent-color:var(--success)" oninput="syncInput('cons');runScenario()">
+              <input id="in-cons" type="number" value="10" min="0" max="200" style="width:52px;background:var(--surface2);border:1px solid var(--border);color:var(--success);font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;padding:4px 6px;border-radius:6px;text-align:center;outline:none;" oninput="syncSlider('cons');runScenario()">
+              <span style="color:var(--muted);font-size:12px;">%</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">نمو بطيء ومستقر · مناسب للأسهم الناضجة</div>
+        </div>
+
+        <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:12px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:13px;font-weight:700;color:var(--accent2)">🚶 متوسط</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input id="sl-base" type="range" min="0" max="80" value="25" step="1" style="width:100px;accent-color:var(--accent2)" oninput="syncInput('base');runScenario()">
+              <input id="in-base" type="number" value="25" min="0" max="200" style="width:52px;background:var(--surface2);border:1px solid var(--border);color:var(--accent2);font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;padding:4px 6px;border-radius:6px;text-align:center;outline:none;" oninput="syncSlider('base');runScenario()">
+              <span style="color:var(--muted);font-size:12px;">%</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">نمو معقول · مناسب لمعظم أسهم البورصة المصرية</div>
+        </div>
+
+        <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:13px;font-weight:700;color:var(--warn)">🚀 متفائل</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input id="sl-bull" type="range" min="0" max="150" value="50" step="1" style="width:100px;accent-color:var(--warn)" oninput="syncInput('bull');runScenario()">
+              <input id="in-bull" type="number" value="50" min="0" max="300" style="width:52px;background:var(--surface2);border:1px solid var(--border);color:var(--warn);font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;padding:4px 6px;border-radius:6px;text-align:center;outline:none;" oninput="syncSlider('bull');runScenario()">
+              <span style="color:var(--muted);font-size:12px;">%</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">نمو قوي · مبني على أداء تاريخي ممتاز</div>
+        </div>
+
+        <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:13px;font-weight:700;color:var(--danger)">📉 سلبي</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input id="sl-bear" type="range" min="-50" max="0" value="-15" step="1" style="width:100px;accent-color:var(--danger)" oninput="syncInput('bear');runScenario()">
+              <input id="in-bear" type="number" value="-15" min="-90" max="0" style="width:52px;background:var(--surface2);border:1px solid var(--border);color:var(--danger);font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;padding:4px 6px;border-radius:6px;text-align:center;outline:none;" oninput="syncSlider('bear');runScenario()">
+              <span style="color:var(--muted);font-size:12px;">%</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">ماذا لو نزل السهم؟ لمعرفة أقصى خسارة</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card" id="sc-results-card" style="display:none">
+      <div class="card-header">
+        <div class="card-title" id="sc-results-title">نتائج السيناريوهات</div>
+        <span class="badge badge-beginner" id="sc-invest-badge"></span>
+      </div>
+
+      <!-- Years tabs -->
+      <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="yr-btn active" onclick="setYear(1)" id="yr1">سنة 1</button>
+        <button class="yr-btn" onclick="setYear(2)" id="yr2">سنتين</button>
+        <button class="yr-btn" onclick="setYear(3)" id="yr3">3 سنوات</button>
+        <button class="yr-btn" onclick="setYear(5)" id="yr5">5 سنوات</button>
+      </div>
+
+      <div id="sc-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+      <!-- Comparison bar -->
+      <div style="background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600;">مقارنة العائد بعد <span id="bar-year-label">سنة</span></div>
+        <div id="sc-bars"></div>
+      </div>
+
+      <!-- Full table -->
+      <div style="overflow-x:auto;">
+        <table id="sc-table" style="width:100%;border-collapse:collapse;font-size:12px;"></table>
+      </div>
+
+      <div style="margin-top:16px;padding:12px 16px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;">
+        <div style="font-size:11px;color:var(--danger);font-weight:700;margin-bottom:4px;">⚠️ تنبيه مهم</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.7;">السيناريوهات دي مبنية على افتراضات وليست ضماناً. الأداء التاريخي لا يضمن أداء مستقبلي. استخدم الأرقام كأداة تفكير وليس توقعاً حتمياً.</div>
+      </div>
+    </div>
+
+    <div id="sc-empty" style="text-align:center;padding:60px 20px;color:var(--muted);">
+      <div style="font-size:40px;margin-bottom:12px;">📊</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px;">أدخل بيانات الاستثمار</div>
+      <div style="font-size:13px;">حط سعر الشراء وعدد الأسهم وهتشوف النتائج تلقائياً</div>
+    </div>
+
   </div>
 
   <!-- PAGE 3: GUIDE -->
@@ -592,9 +733,15 @@ function buildCompareTable() {
     compareStocks.forEach(s => {
       const raw = s.vals[c.id];
       let cell = `<div class="cg-input-cell"><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--accent)">${raw||'—'}</span></div>`;
-      if(raw!=='') {
-        const v = c.text?raw:parseFloat(raw);
-        if(!isNaN(v)||c.text){ const r=c.eval(v); cell=`<div class="cg-result-cell"><span class="criteria-result res-${r.c}" style="font-size:11px">${r.t}</span></div>`; }
+      if(raw!=='' && raw!==undefined) {
+        if(c.select) {
+          // select type — pass raw value directly to eval
+          const r = c.eval(raw);
+          if(r.c !== 'empty') cell = `<div class="cg-result-cell"><span class="criteria-result res-${r.c}" style="font-size:11px">${r.t}</span></div>`;
+        } else {
+          const v = c.text ? raw : parseFloat(raw);
+          if(!isNaN(v) || c.text) { const r=c.eval(v); cell=`<div class="cg-result-cell"><span class="criteria-result res-${r.c}" style="font-size:11px">${r.t}</span></div>`; }
+        }
       }
       html += cell;
     });
@@ -637,7 +784,7 @@ function buildGuide() {
 
 // ── Tabs ──────────────────────────────────────────────────────────────────
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i)=>{ t.classList.toggle('active', ['evaluate','compare','guide'][i]===name); });
+  document.querySelectorAll('.tab').forEach((t,i)=>{ t.classList.toggle('active', ['evaluate','compare','scenario','guide'][i]===name); });
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
 }
@@ -647,6 +794,139 @@ function resetForm() {
   ['s-name','s-price'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('s-sector').value='';
   recalculate();
+}
+
+
+// ── Scenario Calculator ──────────────────────────────────────────────────
+let currentYear = 1;
+
+function syncInput(key) {
+  document.getElementById('in-'+key).value = document.getElementById('sl-'+key).value;
+}
+function syncSlider(key) {
+  const v = parseFloat(document.getElementById('in-'+key).value)||0;
+  document.getElementById('sl-'+key).value = v;
+}
+function setYear(y) {
+  currentYear = y;
+  ['1','2','3','5'].forEach(n => document.getElementById('yr'+n).classList.toggle('active', parseInt(n)===y));
+  runScenario();
+}
+
+function fmt(n) {
+  if(n>=1e9) return (n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toFixed(2);
+}
+function fmtJ(n) { return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',') + ' ج'; }
+
+function calcFV(principal, ratePercent, divPercent, years) {
+  const r = ratePercent/100;
+  const d = divPercent/100;
+  let val = principal;
+  let totalDiv = 0;
+  for(let i=0;i<years;i++) {
+    totalDiv += val * d;  // dividend on current value
+    val = val * (1+r);
+  }
+  return { finalVal: val, totalDiv, total: val+totalDiv, profit: val+totalDiv-principal, pct: ((val+totalDiv-principal)/principal)*100 };
+}
+
+function runScenario() {
+  const buyPrice = parseFloat(document.getElementById('sc-buy').value)||0;
+  const qty = parseFloat(document.getElementById('sc-qty').value)||0;
+  const divPct = parseFloat(document.getElementById('sc-div').value)||0;
+  const name = document.getElementById('sc-name').value||'السهم';
+  const principal = buyPrice * qty;
+
+  if(!buyPrice || !qty) {
+    document.getElementById('sc-results-card').style.display='none';
+    document.getElementById('sc-empty').style.display='block';
+    return;
+  }
+  document.getElementById('sc-results-card').style.display='block';
+  document.getElementById('sc-empty').style.display='none';
+  document.getElementById('sc-results-title').textContent = 'نتائج السيناريوهات — ' + name;
+  document.getElementById('sc-invest-badge').textContent = 'رأس المال: ' + fmtJ(principal);
+
+  const scenarios = [
+    { key:'cons', label:'متحفظ 🐢', color:'var(--success)',  bg:'rgba(16,185,129,.08)',  border:'rgba(16,185,129,.25)' },
+    { key:'base', label:'متوسط 🚶', color:'var(--accent2)', bg:'rgba(59,130,246,.08)',  border:'rgba(59,130,246,.25)' },
+    { key:'bull', label:'متفائل 🚀',color:'var(--warn)',    bg:'rgba(245,158,11,.08)', border:'rgba(245,158,11,.25)' },
+    { key:'bear', label:'سلبي 📉',   color:'var(--danger)',  bg:'rgba(239,68,68,.08)',   border:'rgba(239,68,68,.25)' },
+  ];
+
+  const rates = {};
+  scenarios.forEach(s => rates[s.key] = parseFloat(document.getElementById('in-'+s.key).value)||0);
+
+  const yr = currentYear;
+  const results = {};
+  scenarios.forEach(s => { results[s.key] = calcFV(principal, rates[s.key], divPct, yr); });
+
+  // Cards
+  const cardsEl = document.getElementById('sc-cards');
+  cardsEl.innerHTML = scenarios.map(s => {
+    const r = results[s.key];
+    const isPos = r.profit >= 0;
+    return `<div class="sc-result-card" style="background:${s.bg};border:1px solid ${s.border}">
+      <div style="font-size:12px;font-weight:700;color:${s.color}">${s.label}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">نمو ${rates[s.key]}% سنوياً</div>
+      <div class="sc-val" style="color:${s.color}">${fmtJ(r.total)}</div>
+      <div class="sc-profit" style="color:${isPos?'var(--success)':'var(--danger)'}">
+        ${isPos?'+ ':'- '}${fmtJ(Math.abs(r.profit))}
+      </div>
+      <div class="sc-label">${isPos?'ربح':'خسارة'} ${Math.abs(r.pct).toFixed(1)}%</div>
+      ${divPct>0?`<div style="font-size:10px;color:var(--muted);margin-top:4px">منها توزيعات ${fmtJ(r.totalDiv)}</div>`:''}
+    </div>`;
+  }).join('');
+
+  // Bars
+  const maxVal = Math.max(...scenarios.map(s=>results[s.key].total));
+  const barsEl = document.getElementById('sc-bars');
+  document.getElementById('bar-year-label').textContent = yr===1?'سنة':yr===2?'سنتين':yr+' سنوات';
+  barsEl.innerHTML = scenarios.map(s => {
+    const r = results[s.key];
+    const widthPct = Math.max((r.total/maxVal)*100, 3);
+    return `<div class="sc-bar-row">
+      <div class="sc-bar-label" style="color:${s.color};font-weight:700">${s.label}</div>
+      <div class="sc-bar-track">
+        <div class="sc-bar-fill" style="width:${widthPct}%;background:${s.color}">
+          <span class="sc-bar-num">${fmtJ(r.total)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Full table (all years)
+  const years = [1,2,3,5];
+  const table = document.getElementById('sc-table');
+  const headers = ['السنة', ...scenarios.map(s=>`<span style="color:${s.color}">${s.label}</span>`)];
+  let thtml = `<thead><tr>${headers.map(h=>`<th class="sc-table">${h}</th>`).join('')}</tr></thead><tbody>`;
+
+  // Row for initial investment
+  thtml += `<tr><td style="color:var(--muted);font-weight:600">البداية</td>`;
+  scenarios.forEach(() => { thtml += `<td style="font-family:'IBM Plex Mono',monospace;font-weight:700">${fmtJ(principal)}</td>`; });
+  thtml += '</tr>';
+
+  years.forEach(y => {
+    const isActive = y===yr;
+    thtml += `<tr style="${isActive?'background:rgba(0,212,170,.06);':''}" onclick="setYear(${y})" style="cursor:pointer">`;
+    thtml += `<td style="font-weight:${isActive?700:400};color:${isActive?'var(--accent)':'var(--text)'}">`;
+    thtml += y===1?'بعد سنة':y===2?'بعد سنتين':`بعد ${y} سنوات`;
+    thtml += '</td>';
+    scenarios.forEach(s => {
+      const r = calcFV(principal, rates[s.key], divPct, y);
+      const isPos = r.profit>=0;
+      thtml += `<td>
+        <div style="font-family:'IBM Plex Mono',monospace;font-weight:700">${fmtJ(r.total)}</div>
+        <div style="font-size:10px;color:${isPos?'var(--success)':'var(--danger)'}">${isPos?'+':''}${r.pct.toFixed(1)}%</div>
+      </td>`;
+    });
+    thtml += '</tr>';
+  });
+  thtml += '</tbody>';
+  table.innerHTML = thtml;
 }
 
 // ── LocalStorage persistence ─────────────────────────────────────────────
