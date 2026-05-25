@@ -297,6 +297,7 @@
     <button class="tab active" onclick="switchTab('evaluate')">🔍 تقييم سهم</button>
     <button class="tab" onclick="switchTab('compare')">⚖️ مقارنة أسهم</button>
     <button class="tab" onclick="switchTab('scenario')">📊 السيناريوهات</button>
+    <button class="tab" onclick="switchTab('price')">💰 تقييم السعر</button>
     <button class="tab" onclick="switchTab('guide')">📚 الـ 20 نقطة</button>
   </div>
 
@@ -505,6 +506,150 @@
       <div style="font-size:40px;margin-bottom:12px;">📊</div>
       <div style="font-size:15px;font-weight:600;margin-bottom:6px;">أدخل بيانات الاستثمار</div>
       <div style="font-size:13px;">حط سعر الشراء وعدد الأسهم وهتشوف النتائج تلقائياً</div>
+    </div>
+
+  </div>
+
+
+  <!-- PAGE: PRICE EVALUATION -->
+  <div id="page-price" class="page">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">تقييم السعر الحالي للسهم</div>
+        <span class="badge badge-mid">أدخل البيانات من Investing.com</span>
+      </div>
+      <div class="stock-info-grid">
+        <div class="field"><label>اسم السهم</label><input id="pv-name" placeholder="مصر للفنادق" oninput="runPriceEval()"></div>
+        <div class="field"><label>سعر السهم الحالي (ج)</label><input id="pv-price" type="number" placeholder="33.02" step="any" oninput="runPriceEval()"></div>
+        <div class="field"><label>ربحية السهم EPS (ج)</label><input id="pv-eps" type="number" placeholder="2.44" step="any" oninput="runPriceEval()"></div>
+        <div class="field"><label>القيمة الدفترية للسهم (ج)</label><input id="pv-book" type="number" placeholder="8.47" step="any" oninput="runPriceEval()"></div>
+        <div class="field"><label>نسبة النمو السنوي % (من النتائج)</label><input id="pv-growth" type="number" placeholder="22" step="any" oninput="runPriceEval()"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:-8px;padding:8px 12px;background:rgba(0,212,170,.04);border-radius:8px;">
+        💡 القيمة الدفترية للسهم = بتلاقيها في Investing.com باسم "القيمة الدفترية/السهم" · نسبة النمو = التغير في صافي الربح مقارنة بالسنة السابقة
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="pv-results" style="display:none">
+
+      <!-- 3 Metrics Cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px;">
+
+        <!-- P/E Card -->
+        <div class="card" style="margin-bottom:0;border-color:rgba(59,130,246,.3)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div>
+              <div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.5px;">المعيار الأول</div>
+              <div style="font-size:15px;font-weight:700;margin-top:2px;">مكرر الربحية P/E</div>
+            </div>
+            <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(59,130,246,.15);color:var(--accent2);">وزن 40%</span>
+          </div>
+          <div style="font-size:36px;font-weight:900;font-family:'IBM Plex Mono',monospace;color:var(--accent2)" id="pv-pe-val">—</div>
+          <div style="font-size:11px;color:var(--muted);margin:4px 0 12px;">سعر السهم ÷ ربحية السهم</div>
+          <div id="pv-pe-bar" style="height:6px;background:var(--surface2);border-radius:3px;margin-bottom:10px;overflow:hidden;">
+            <div id="pv-pe-fill" style="height:100%;border-radius:3px;transition:width .6s ease;width:0%"></div>
+          </div>
+          <div class="criteria-result" id="pv-pe-res" style="width:100%;font-size:12px;">—</div>
+          <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.8;">
+            أقل من 10 = رخيص جداً<br>10 – 15 = مقبول<br>15 – 20 = غالي نسبياً<br>أكتر من 20 = غالي
+          </div>
+        </div>
+
+        <!-- P/B Card -->
+        <div class="card" style="margin-bottom:0;border-color:rgba(16,185,129,.3)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div>
+              <div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.5px;">المعيار الثاني</div>
+              <div style="font-size:15px;font-weight:700;margin-top:2px;">السعر للقيمة الدفترية P/B</div>
+            </div>
+            <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(16,185,129,.15);color:var(--success);">وزن 30%</span>
+          </div>
+          <div style="font-size:36px;font-weight:900;font-family:'IBM Plex Mono',monospace;color:var(--success)" id="pv-pb-val">—</div>
+          <div style="font-size:11px;color:var(--muted);margin:4px 0 12px;">سعر السهم ÷ القيمة الدفترية للسهم</div>
+          <div id="pv-pb-bar" style="height:6px;background:var(--surface2);border-radius:3px;margin-bottom:10px;overflow:hidden;">
+            <div id="pv-pb-fill" style="height:100%;border-radius:3px;transition:width .6s ease;width:0%"></div>
+          </div>
+          <div class="criteria-result" id="pv-pb-res" style="width:100%;font-size:12px;">—</div>
+          <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.8;">
+            أقل من 1 = نادر وفرصة استثنائية 🔥<br>1 – 1.5 = رخيص<br>1.5 – 3 = مقبول<br>أكتر من 3 = غالي
+          </div>
+        </div>
+
+        <!-- PEG Card -->
+        <div class="card" style="margin-bottom:0;border-color:rgba(245,158,11,.3)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div>
+              <div style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.5px;">المعيار الثالث</div>
+              <div style="font-size:15px;font-weight:700;margin-top:2px;">السعر مع النمو PEG</div>
+            </div>
+            <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(245,158,11,.15);color:var(--warn);">وزن 30%</span>
+          </div>
+          <div style="font-size:36px;font-weight:900;font-family:'IBM Plex Mono',monospace;color:var(--warn)" id="pv-peg-val">—</div>
+          <div style="font-size:11px;color:var(--muted);margin:4px 0 12px;">P/E ÷ نسبة النمو السنوي</div>
+          <div id="pv-peg-bar" style="height:6px;background:var(--surface2);border-radius:3px;margin-bottom:10px;overflow:hidden;">
+            <div id="pv-peg-fill" style="height:100%;border-radius:3px;transition:width .6s ease;width:0%"></div>
+          </div>
+          <div class="criteria-result" id="pv-peg-res" style="width:100%;font-size:12px;">—</div>
+          <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.8;">
+            أقل من 1 = رخيص مع نمو ✅<br>1 – 2 = مقبول<br>أكتر من 2 = غالي<br>بدون نمو = N/A
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Final Verdict -->
+      <div id="pv-verdict-card" style="border-radius:16px;padding:24px;margin-bottom:20px;border:1px solid;transition:.3s;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div style="font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;" id="pv-stock-label">—</div>
+            <div style="font-size:28px;font-weight:900;" id="pv-verdict-text">—</div>
+            <div style="font-size:13px;margin-top:4px;opacity:.8;" id="pv-verdict-desc">—</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:48px;font-weight:900;font-family:'IBM Plex Mono',monospace;" id="pv-score-big">—</div>
+            <div style="font-size:11px;opacity:.7;">درجة تقييم السعر / 100</div>
+          </div>
+        </div>
+
+        <!-- Weighted breakdown -->
+        <div style="margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="pv-breakdown"></div>
+      </div>
+
+      <!-- Range indicator -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><div class="card-title">منطقة السعر العادل المقدرة</div></div>
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;">
+            <span>سعر مقبول جداً</span>
+            <span>السعر الحالي</span>
+            <span>سعر غالي</span>
+          </div>
+          <div style="position:relative;height:12px;background:linear-gradient(90deg,var(--success),var(--accent2),var(--warn),var(--danger));border-radius:6px;">
+            <div id="pv-needle" style="position:absolute;top:-4px;width:4px;height:20px;background:white;border-radius:2px;box-shadow:0 0 6px rgba(0,0,0,.5);transition:left .6s ease;left:50%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;font-family:'IBM Plex Mono',monospace;">
+            <span style="color:var(--success)" id="pv-fair-low">—</span>
+            <span style="color:var(--warn)" id="pv-current-lbl">السعر الحالي</span>
+            <span style="color:var(--danger)" id="pv-fair-high">—</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:4px;" id="pv-ranges"></div>
+      </div>
+
+      <!-- Note -->
+      <div style="padding:12px 16px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;">
+        <div style="font-size:11px;color:var(--danger);font-weight:700;margin-bottom:4px;">⚠️ تنبيه</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.7;">التقييم مبني على 3 معايير كمية فقط. السعر العادل تقدير وليس حكماً قاطعاً — أخبار الشركة والسوق وتوقعات النمو بتأثر على السعر بشكل كبير.</div>
+      </div>
+
+    </div>
+
+    <div id="pv-empty" style="text-align:center;padding:60px 20px;color:var(--muted);">
+      <div style="font-size:40px;margin-bottom:12px;">💰</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px;">أدخل بيانات السهم</div>
+      <div style="font-size:13px;">سعر السهم + ربحية السهم + القيمة الدفترية = حكم فوري على السعر</div>
     </div>
 
   </div>
@@ -784,7 +929,7 @@ function buildGuide() {
 
 // ── Tabs ──────────────────────────────────────────────────────────────────
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i)=>{ t.classList.toggle('active', ['evaluate','compare','scenario','guide'][i]===name); });
+  document.querySelectorAll('.tab').forEach((t,i)=>{ t.classList.toggle('active', ['evaluate','compare','scenario','price','guide'][i]===name); });
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
 }
@@ -927,6 +1072,155 @@ function runScenario() {
   });
   thtml += '</tbody>';
   table.innerHTML = thtml;
+}
+
+
+// ── Price Evaluation ─────────────────────────────────────────────────────
+function evalPE(pe) {
+  if(pe < 10) return {t:'رخيص جداً ✅', c:'great', s:40, fill:85, color:'var(--success)'};
+  if(pe < 15) return {t:'مقبول ✅',      c:'good',  s:28, fill:65, color:'var(--accent2)'};
+  if(pe < 20) return {t:'غالي نسبياً ⚠️',c:'warn',  s:16, fill:40, color:'var(--warn)'};
+  return              {t:'غالي جداً ❌',  c:'bad',   s:5,  fill:15, color:'var(--danger)'};
+}
+function evalPB(pb) {
+  if(pb < 1)   return {t:'فرصة استثنائية 🔥',c:'great',s:30, fill:95, color:'var(--success)'};
+  if(pb < 1.5) return {t:'رخيص ✅',           c:'great',s:24, fill:75, color:'var(--success)'};
+  if(pb < 3)   return {t:'مقبول ⚠️',          c:'warn', s:15, fill:45, color:'var(--accent2)'};
+  return              {t:'غالي ❌',            c:'bad',  s:5,  fill:15, color:'var(--danger)'};
+}
+function evalPEG(peg) {
+  if(peg <= 0) return {t:'لا ينطبق',     c:'empty', s:15, fill:50, color:'var(--muted)'};
+  if(peg < 1)  return {t:'رخيص مع نمو ✅',c:'great', s:30, fill:90, color:'var(--success)'};
+  if(peg < 2)  return {t:'مقبول ⚠️',     c:'warn',  s:18, fill:55, color:'var(--warn)'};
+  return              {t:'غالي ❌',       c:'bad',   s:5,  fill:15, color:'var(--danger)'};
+}
+
+function setBar(fillId, pct, color) {
+  const el = document.getElementById(fillId);
+  if(el) { el.style.width = pct+'%'; el.style.background = color; }
+}
+
+function runPriceEval() {
+  const price  = parseFloat(document.getElementById('pv-price').value)  || 0;
+  const eps    = parseFloat(document.getElementById('pv-eps').value)    || 0;
+  const book   = parseFloat(document.getElementById('pv-book').value)   || 0;
+  const growth = parseFloat(document.getElementById('pv-growth').value) || 0;
+  const name   = document.getElementById('pv-name').value || 'السهم';
+
+  if(!price || !eps || !book) {
+    document.getElementById('pv-results').style.display = 'none';
+    document.getElementById('pv-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('pv-results').style.display = 'block';
+  document.getElementById('pv-empty').style.display = 'none';
+
+  const pe  = price / eps;
+  const pb  = price / book;
+  const peg = growth > 0 ? pe / growth : 0;
+
+  // Eval each
+  const peR  = evalPE(pe);
+  const pbR  = evalPB(pb);
+  const pegR = evalPEG(peg);
+
+  // Display values
+  document.getElementById('pv-pe-val').textContent  = pe.toFixed(1)  + 'x';
+  document.getElementById('pv-pb-val').textContent  = pb.toFixed(2)  + 'x';
+  document.getElementById('pv-peg-val').textContent = peg > 0 ? peg.toFixed(2) : 'N/A';
+
+  // Result badges
+  const peRes = document.getElementById('pv-pe-res');
+  peRes.textContent = peR.t; peRes.className = 'criteria-result res-'+peR.c;
+  const pbRes = document.getElementById('pv-pb-res');
+  pbRes.textContent = pbR.t; pbRes.className = 'criteria-result res-'+pbR.c;
+  const pegRes = document.getElementById('pv-peg-res');
+  pegRes.textContent = pegR.t; pegRes.className = 'criteria-result res-'+pegR.c;
+
+  // Bars
+  setBar('pv-pe-fill',  peR.fill,  peR.color);
+  setBar('pv-pb-fill',  pbR.fill,  pbR.color);
+  setBar('pv-peg-fill', pegR.fill, pegR.color);
+
+  // Total score
+  const totalScore = peR.s + pbR.s + pegR.s;
+
+  // Verdict
+  let verdict, vDesc, vBg, vBorder, vColor;
+  if(totalScore >= 80) {
+    verdict='رخيص جداً — فرصة دخول قوية 🔥'; vDesc='السعر الحالي أقل من قيمته الحقيقية بشكل واضح';
+    vBg='rgba(16,185,129,.08)'; vBorder='rgba(16,185,129,.3)'; vColor='var(--success)';
+  } else if(totalScore >= 60) {
+    verdict='بسعره العادل — دخول مقبول ✅'; vDesc='السعر معقول ومناسب للشراء على المدى المتوسط';
+    vBg='rgba(59,130,246,.08)'; vBorder='rgba(59,130,246,.3)'; vColor='var(--accent2)';
+  } else if(totalScore >= 35) {
+    verdict='غالي نسبياً — انتظر تراجع ⚠️'; vDesc='السعر أعلى من المتوسط — ممكن تنتظر فرصة أفضل';
+    vBg='rgba(245,158,11,.08)'; vBorder='rgba(245,158,11,.3)'; vColor='var(--warn)';
+  } else {
+    verdict='غالي جداً — تجنب دلوقتي ❌'; vDesc='السعر مبالغ فيه مقارنة بالأرباح والأصول';
+    vBg='rgba(239,68,68,.08)'; vBorder='rgba(239,68,68,.3)'; vColor='var(--danger)';
+  }
+
+  const vc = document.getElementById('pv-verdict-card');
+  vc.style.background = vBg; vc.style.borderColor = vBorder;
+  document.getElementById('pv-stock-label').textContent = name;
+  document.getElementById('pv-stock-label').style.color = vColor;
+  document.getElementById('pv-verdict-text').textContent = verdict;
+  document.getElementById('pv-verdict-text').style.color = vColor;
+  document.getElementById('pv-verdict-desc').textContent = vDesc;
+  document.getElementById('pv-score-big').textContent = totalScore;
+  document.getElementById('pv-score-big').style.color = vColor;
+
+  // Breakdown
+  const bd = document.getElementById('pv-breakdown');
+  bd.innerHTML = [
+    {label:'P/E (40%)', val:peR.s+'/40', color:peR.color},
+    {label:'P/B (30%)', val:pbR.s+'/30', color:pbR.color},
+    {label:'PEG (30%)', val:pegR.s+'/30', color:pegR.color},
+  ].map(b=>`
+    <div style="text-align:center;background:rgba(255,255,255,.04);border-radius:10px;padding:10px;">
+      <div style="font-size:18px;font-weight:900;font-family:'IBM Plex Mono',monospace;color:${b.color}">${b.val}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:3px">${b.label}</div>
+    </div>`).join('');
+
+  // Fair value range
+  const fairLow  = (eps * 10).toFixed(2);   // P/E = 10
+  const fairMid  = (eps * 15).toFixed(2);   // P/E = 15
+  const fairHigh = (eps * 20).toFixed(2);   // P/E = 20
+  const fairPB   = (book * 1.5).toFixed(2); // P/B = 1.5
+
+  document.getElementById('pv-fair-low').textContent  = fairLow + ' ج';
+  document.getElementById('pv-fair-high').textContent = fairHigh + ' ج';
+
+  // Needle position
+  const midFair = parseFloat(fairMid);
+  const ratio = price / midFair;
+  const needlePct = Math.min(Math.max((ratio / 2) * 100, 2), 98);
+  document.getElementById('pv-needle').style.left = needlePct + '%';
+
+  // Ranges
+  document.getElementById('pv-ranges').innerHTML = `
+    <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:3px">رخيص (P/E أقل من 10)</div>
+      <div style="font-size:14px;font-weight:700;color:var(--success);font-family:'IBM Plex Mono',monospace;">أقل من ${fairLow} ج</div>
+    </div>
+    <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:3px">عادل (P/E 10-15)</div>
+      <div style="font-size:14px;font-weight:700;color:var(--accent2);font-family:'IBM Plex Mono',monospace;">${fairLow} – ${fairMid} ج</div>
+    </div>
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:3px">غالي نسبياً (P/E 15-20)</div>
+      <div style="font-size:14px;font-weight:700;color:var(--warn);font-family:'IBM Plex Mono',monospace;">${fairMid} – ${fairHigh} ج</div>
+    </div>
+    <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:3px">غالي جداً (P/E أكتر من 20)</div>
+      <div style="font-size:14px;font-weight:700;color:var(--danger);font-family:'IBM Plex Mono',monospace;">أكتر من ${fairHigh} ج</div>
+    </div>
+    ${book>0?`<div style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:3px">رخيص حسب P/B (أقل من 1.5)</div>
+      <div style="font-size:14px;font-weight:700;color:var(--accent);font-family:'IBM Plex Mono',monospace;">أقل من ${fairPB} ج</div>
+    </div>`:''}
+  `;
 }
 
 // ── LocalStorage persistence ─────────────────────────────────────────────
